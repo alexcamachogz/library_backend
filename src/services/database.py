@@ -6,21 +6,29 @@ class DatabaseService:
 
     def __init__(self):
         """
-        Initialize the database connection
+        Initialize MongoDB connection.
+
+        :raises ConnectionFailure: If cannot connect to MongoDB
+        :raises Exception: If unexpected error during initialization
         """
         try:
+            print(f"Connecting to MongoDB: {MONGODB_URL}")
+            print(f"Database: {DATABASE_NAME}, Collection: {COLLECTION_NAME}")
+
             self.client = MongoClient(MONGODB_URL)
             self.db = self.client[DATABASE_NAME]
             self.collection = self.db[COLLECTION_NAME]
 
-            # Verify MongoDB connection
+            # Test connection
             self.client.admin.command('ping')
-            print("Connection to MongoDB established successfully")
+            print("MongoDB connection established successfully")
 
         except ConnectionFailure as e:
-            print(f"Error to connect to MongoDB: {e}")
+            print(f"Error connecting to MongoDB: {e}")
+            raise
         except Exception as e:
-            print(f"Error to connect to MongoDB: {e}")
+            print(f"Unexpected error initializing database: {e}")
+            raise
 
     def add_book(self, book_data):
         """

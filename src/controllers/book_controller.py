@@ -73,18 +73,21 @@ def add_book():
             "message": "An unexpected error occurred",
         }), 500
 
-@book_bp.route('/books', methods=['GET'])
+
+@book_bp.route('/books/<string:isbn>', methods=['GET'])
 def get_book(isbn):
     """
-    Get a book from library by ISBN
+    Get a book from library by ISBN.
+
     :param isbn: Book ISBN identifier
     :type isbn: str
     :return: JSON response with book data or error message
     :rtype: tuple[Response, int]
-    :raises: Exception: If unexpected error occurs during retrieval
+    :raises Exception: If unexpected error occurs during retrieval
     """
     try:
         book = db_service.get_book_by_isbn(isbn)
+
         if book:
             # Convert ObjectId to string for JSON serialization
             book['_id'] = str(book['_id'])
@@ -92,10 +95,12 @@ def get_book(isbn):
         else:
             return jsonify({
                 "error": "Book not found",
-                "message": f"No book with ISBN {isbn} in your library."
-            })
-    except Exception:
+                "message": f"No book found with ISBN {isbn} in your library"
+            }), 404
+
+    except Exception as e:
+        print(f"Error in get_book endpoint: {e}")  # Para debugging
         return jsonify({
             "error": "Internal server error",
-            "message": "An unexpected error occurred",
+            "message": "An unexpected error occurred"
         }), 500
