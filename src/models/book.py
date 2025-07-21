@@ -45,7 +45,23 @@ def get_book_models(api):
         'cover_image': fields.String(description='Cover image URL'),
         'published_date': fields.String(description='Publication date'),
         'publisher': fields.String(description='Publisher name'),
-        'language': fields.String(description='Book language')
+        'language': fields.String(description='Book language'),
+        'reading_status': fields.String(description='Reading status', enum=['unread', 'read'], default='unread')
+    })
+
+    status_update = api.model('StatusUpdate', {
+        'reading_status': fields.String(
+            required=True,
+            description='New reading status',
+            enum=['unread', 'read'],
+            example='read'
+        )
+    })
+
+    status_response = api.model('StatusResponse', {
+        'message': fields.String(description='Success message'),
+        'isbn': fields.String(description='Book ISBN'),
+        'reading_status': fields.String(description='Updated reading status')
     })
 
     # Response models
@@ -83,6 +99,11 @@ def get_book_models(api):
         'pagination': fields.Raw(description='Pagination info')
     })
 
+    statistics_response = api.model('StatisticsResponse', {
+        'message': fields.String(description='Response message'),
+        'statistics': fields.Raw(description='Reading statistics data')
+    })
+
     return {
         'book_input': book_input,
         'book_update': book_update,
@@ -91,5 +112,8 @@ def get_book_models(api):
         'error_response': error_response,
         'books_list_response': books_list_response,
         'search_query': search_query,
-        'search_response': search_response
+        'search_response': search_response,
+        'status_update': status_update,
+        'status_response': status_response,
+        'statistics_response': statistics_response
     }

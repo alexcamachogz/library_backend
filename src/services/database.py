@@ -32,10 +32,18 @@ class DatabaseService:
     # Create
     def add_book(self, book_data):
         """
-        Add a book to the collection
-        Returns True if added successfully, False if it already exists
+        Add a book to the MongoDB collection.
+
+        :param book_data: Dictionary containing book information
+        :type book_data: dict
+        :return: True if book was added successfully, False if already exists
+        :rtype: bool
+        :raises Exception: If database operation fails
         """
         try:
+            if 'reading_status' not in book_data:
+                book_data['reading_status'] = 'unread'
+
             result = self.collection.insert_one(book_data)
             print(f"Book successfully added with ID: {result.inserted_id}")
             return True
@@ -289,4 +297,103 @@ class DatabaseService:
 
         except Exception as e:
             print(f"Error getting books by category: {e}")
+            raise
+
+    def update_reading_status(self, isbn, status):
+        """
+        Update reading status of a book.
+
+        :param isbn: Book ISBN identifier
+        :type isbn: str
+        :param status: New reading status ('read' or 'unread')
+        :type status: str
+        :return: True if status was updated, False if book not found
+        :rtype: bool
+        :raises Exception: If database operation fails
+        """
+        try:
+            # Validate status
+            if status not in ['read', 'unread']:
+                raise ValueError("Status must be 'read' or 'unread'")
+
+            result = self.collection.update_one(
+                {"isbn": isbn},
+                {"$set": {"reading_status": status}}
+            )
+
+            if result.matched_count > 0:
+                print(f"Reading status for ISBN {isbn} updated to '{status}'")
+                return True
+            else:
+                print(f"No book found with ISBN {isbn}")
+                return False
+
+        except Exception as e:
+            print(f"Error updating reading status: {e}")
+            raise
+
+    def get_books_by_status(self, status, limit=50, skip=0):
+        """
+        Get books by reading status.
+
+        :param status: Reading status to filter by ('read' or 'unread')
+        :type status: str
+        :param limit: Maximum number of books to return
+        :type limit: int
+        :param skip: Number of books to skip
+        :type skip: int
+        :return: List of books with the specified status
+        :rtype: list
+        :raises Exception: If database operation fails
+        """
+        try:
+            if status not in ['read', 'unread']:
+                raise ValueError("Status must be 'read' or 'unread'")
+
+            books = list(
+                self.collection.find({"reading_status": status})
+                .skip(skip)
+                .limit(limit)
+            )
+
+            # Convert ObjectId to string for JSON serialization
+            for book in books:
+                book['_id'] = str(book['_id'])
+
+            print(f"Found {len(books)} books with status '{status}'")
+            return books
+
+        except Exception as e:
+            print(f"Error getting books by status: {e}")
+            raise
+
+    def get_reading_statistics(self):
+        """
+        Get reading statistics (count of read vs unread books).
+
+        :return: Dictionary with reading statistics
+        :rtype: dict
+        :raises Exception: If database operation fails
+        """
+        try:
+            # Count books by status
+            read_count = self.collection.count_documents({"reading_status": "read"})
+            unread_count = self.collection.count_documents({"reading_status": "unread"})
+            total_count = self.collection.count_documents({})
+
+            # Handle books without reading_status (existing books)
+            no_status_count = total_count - read_count - unread_count
+
+            stats = {
+                "total_books": total_count,
+                "read": read_count,
+                "unread": unread_count + no_status_count,  # Consider books without status as unread
+                "reading_percentage": round((read_count / total_count * 100), 2) if total_count > 0 else 0
+            }
+
+            print(f"Reading statistics: {stats}")
+            return stats
+
+        except Exception as e:
+            print(f"Error getting reading statistics: {e}")
             raise

@@ -341,3 +341,110 @@ class BooksByCategory(Resource):
 
         except Exception as e:
             api.abort(500, f"An unexpected error occurred: {str(e)}")
+
+
+@api.route('/<string:isbn>/status')
+@api.param('isbn', 'Book ISBN identifier')
+class BookStatus(Resource):
+    @api.doc('update_reading_status')
+    @api.expect(models['status_update'])
+    @api.marshal_with(models['status_response'])
+    @api.response(200, 'Reading status updated successfully')
+    @api.response(400, 'Invalid input')
+    @api.response(404, 'Book not found')
+    @api.response(500, 'Internal server error')
+    def put(self, isbn):
+        """Update reading status of a book"""
+        try:
+            if not validate_isbn(isbn):
+                api.abort(400, "Please provide a valid ISBN-10 or ISBN-13")
+
+            data = request.get_json()
+
+            if not data or 'reading_status' not in data:
+                api.abort(400, "Reading status is required")
+
+            status = data['reading_status']
+
+            if status not in ['read', 'unread']:
+                api.abort(400, "Reading status must be 'read' or 'unread'")
+
+            if not db_service.book_exists(isbn):
+                api.abort(404, f"No book found with ISBN {isbn} in your library")
+
+            success = db_service.update_reading_status(isbn, status)
+
+            if success:
+                return {
+                    "message": f"Reading status updated to '{status}'",
+                    "isbn": isbn,
+                    "reading_status": status
+                }, 200
+            else:
+                api.abort(500, "There was an error updating the reading status")
+
+        except Exception as e:
+            if not str(e).startswith('400') and not str(e).startswith('404'):
+                api.abort(500, "An unexpected error occurred")
+            raise
+
+
+@api.route('/status/<string:status>')
+@api.param('status', 'Reading status to filter by', enum=['read', 'unread'])
+class BooksByStatus(Resource):
+    @api.doc('get_books_by_status')
+    @api.param('limit', 'Maximum number of results (1-100)', type=int, default=50)
+    @api.param('skip', 'Number of results to skip for pagination', type=int, default=0)
+    @api.marshal_with(models['search_response'])
+    @api.response(200, 'Books retrieved successfully')
+    @api.response(400, 'Invalid status parameter')
+    @api.response(500, 'Internal server error')
+    def get(self, status):
+        """Get all books by reading status"""
+        try:
+            if status not in ['read', 'unread']:
+                api.abort(400, "Status must be 'read' or 'unread'")
+
+            limit = request.args.get('limit', 50, type=int)
+            skip = request.args.get('skip', 0, type=int)
+
+            # Validate pagination parameters
+            if limit <= 0 or limit > 100:
+                limit = 50
+            if skip < 0:
+                skip = 0
+
+            books = db_service.get_books_by_status(status, limit=limit, skip=skip)
+
+            return {
+                "message": f"Found {len(books)} {status} books",
+                "books": books,
+                "search_criteria": {"reading_status": status},
+                "pagination": {
+                    "limit": limit,
+                    "skip": skip,
+                    "count": len(books)
+                }
+            }, 200
+
+        except Exception as e:
+            api.abort(500, f"An unexpected error occurred: {str(e)}")
+
+
+@api.route('/statistics')
+class ReadingStatistics(Resource):
+    @api.doc('get_reading_statistics')
+    @api.response(200, 'Statistics retrieved successfully')
+    @api.response(500, 'Internal server error')
+    def get(self):
+        """Get reading statistics (read vs unread books)"""
+        try:
+            stats = db_service.get_reading_statistics()
+
+            return {
+                "message": "Reading statistics retrieved successfully",
+                "statistics": stats
+            }, 200
+
+        except Exception as e:
+            api.abort(500, f"An unexpected error occurred: {str(e)}")
