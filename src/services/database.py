@@ -161,3 +161,132 @@ class DatabaseService:
         if self.client:
             self.client.close()
             print("Connection to MongoDB closed")
+
+    def search_books(self, query=None, title=None, author=None, category=None, limit=50, skip=0):
+        """
+        Search books by different criteria.
+
+        :param query: General search query (searches in title, authors, description)
+        :type query: str
+        :param title: Search specifically in title
+        :type title: str
+        :param author: Search specifically in authors
+        :type author: str
+        :param category: Search specifically in categories
+        :type category: str
+        :param limit: Maximum number of books to return
+        :type limit: int
+        :param skip: Number of books to skip
+        :type skip: int
+        :return: List of matching books
+        :rtype: list
+        :raises Exception: If database operation fails
+        """
+        try:
+            # Build search filters
+            filters = {}
+
+            if query:
+                # General search using $or operator for multiple fields
+                filters['$or'] = [
+                    {'title': {'$regex': query, '$options': 'i'}},
+                    {'authors': {'$regex': query, '$options': 'i'}},
+                    {'description': {'$regex': query, '$options': 'i'}}
+                ]
+
+            if title:
+                filters['title'] = {'$regex': title, '$options': 'i'}
+
+            if author:
+                filters['authors'] = {'$regex': author, '$options': 'i'}
+
+            if category:
+                filters['categories'] = {'$regex': category, '$options': 'i'}
+
+            # If no search criteria provided, return empty list
+            if not filters:
+                return []
+
+            # Execute search with pagination
+            books = list(
+                self.collection.find(filters)
+                .skip(skip)
+                .limit(limit)
+            )
+
+            # Convert ObjectId to string for JSON serialization
+            for book in books:
+                book['_id'] = str(book['_id'])
+
+            print(f"Found {len(books)} books matching search criteria")
+            return books
+
+        except Exception as e:
+            print(f"Error searching books: {e}")
+            raise
+
+    def get_books_by_author(self, author, limit=50, skip=0):
+        """
+        Get books by specific author.
+
+        :param author: Author name to search for
+        :type author: str
+        :param limit: Maximum number of books to return
+        :type limit: int
+        :param skip: Number of books to skip
+        :type skip: int
+        :return: List of books by the author
+        :rtype: list
+        :raises Exception: If database operation fails
+        """
+        try:
+            books = list(
+                self.collection.find({
+                    'authors': {'$regex': author, '$options': 'i'}
+                })
+                .skip(skip)
+                .limit(limit)
+            )
+
+            for book in books:
+                book['_id'] = str(book['_id'])
+
+            print(f"Found {len(books)} books by author '{author}'")
+            return books
+
+        except Exception as e:
+            print(f"Error getting books by author: {e}")
+            raise
+
+    def get_books_by_category(self, category, limit=50, skip=0):
+        """
+        Get books by specific category.
+
+        :param category: Category to search for
+        :type category: str
+        :param limit: Maximum number of books to return
+        :type limit: int
+        :param skip: Number of books to skip
+        :type skip: int
+        :return: List of books in the category
+        :rtype: list
+        :raises Exception: If database operation fails
+        """
+        try:
+            books = list(
+                self.collection.find({
+                    'categories': {'$regex': category, '$options': 'i'}
+                })
+                .skip(skip)
+                .limit(limit)
+            )
+
+            for book in books:
+                book['_id'] = str(book['_id'])
+
+            print(f"Found {len(books)} books in category '{category}'")
+            return books
+
+        except Exception as e:
+            print(f"Error getting books by category: {e}")
+            raise

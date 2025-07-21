@@ -193,3 +193,151 @@ class Book(Resource):
             if not str(e).startswith('400') and not str(e).startswith('404'):
                 api.abort(500, "An unexpected error occurred")
             raise
+
+
+@api.route('/search')
+class BookSearch(Resource):
+    @api.doc('search_books')
+    @api.param('query', 'General search query (searches in title, authors, description)', type=str)
+    @api.param('title', 'Search specifically in book titles', type=str)
+    @api.param('author', 'Search specifically in authors', type=str)
+    @api.param('category', 'Search specifically in categories', type=str)
+    @api.param('limit', 'Maximum number of results (1-100)', type=int, default=50)
+    @api.param('skip', 'Number of results to skip for pagination', type=int, default=0)
+    @api.marshal_with(models['search_response'])
+    @api.response(200, 'Search completed successfully')
+    @api.response(400, 'Invalid search parameters')
+    @api.response(500, 'Internal server error')
+    def get(self):
+        """Search books by title, author, category, or general query"""
+        try:
+            # Get search parameters
+            query = request.args.get('query', '').strip()
+            title = request.args.get('title', '').strip()
+            author = request.args.get('author', '').strip()
+            category = request.args.get('category', '').strip()
+            limit = request.args.get('limit', 50, type=int)
+            skip = request.args.get('skip', 0, type=int)
+
+            # Validate pagination parameters
+            if limit <= 0 or limit > 100:
+                limit = 50
+            if skip < 0:
+                skip = 0
+
+            # Check if at least one search parameter is provided
+            if not any([query, title, author, category]):
+                api.abort(400, "At least one search parameter is required (query, title, author, or category)")
+
+            # Perform search
+            books = db_service.search_books(
+                query=query if query else None,
+                title=title if title else None,
+                author=author if author else None,
+                category=category if category else None,
+                limit=limit,
+                skip=skip
+            )
+
+            # Build search criteria for response
+            search_criteria = {}
+            if query:
+                search_criteria['query'] = query
+            if title:
+                search_criteria['title'] = title
+            if author:
+                search_criteria['author'] = author
+            if category:
+                search_criteria['category'] = category
+
+            return {
+                "message": f"Found {len(books)} books matching search criteria",
+                "books": books,
+                "search_criteria": search_criteria,
+                "pagination": {
+                    "limit": limit,
+                    "skip": skip,
+                    "count": len(books)
+                }
+            }, 200
+
+        except Exception as e:
+            api.abort(500, f"An unexpected error occurred: {str(e)}")
+
+
+@api.route('/authors/<string:author>')
+@api.param('author', 'Author name to search for')
+class BooksByAuthor(Resource):
+    @api.doc('get_books_by_author')
+    @api.param('limit', 'Maximum number of results (1-100)', type=int, default=50)
+    @api.param('skip', 'Number of results to skip for pagination', type=int, default=0)
+    @api.marshal_with(models['search_response'])
+    @api.response(200, 'Books retrieved successfully')
+    @api.response(400, 'Invalid parameters')
+    @api.response(500, 'Internal server error')
+    def get(self, author):
+        """Get all books by a specific author"""
+        try:
+            limit = request.args.get('limit', 50, type=int)
+            skip = request.args.get('skip', 0, type=int)
+
+            # Validate pagination parameters
+            if limit <= 0 or limit > 100:
+                limit = 50
+            if skip < 0:
+                skip = 0
+
+            books = db_service.get_books_by_author(author, limit=limit, skip=skip)
+
+            return {
+                "message": f"Found {len(books)} books by author '{author}'",
+                "books": books,
+                "search_criteria": {"author": author},
+                "pagination": {
+                    "limit": limit,
+                    "skip": skip,
+                    "count": len(books)
+                }
+            }, 200
+
+        except Exception as e:
+            api.abort(500, f"An unexpected error occurred: {str(e)}")
+
+
+@api.route('/categories/<string:category>')
+@api.param('category', 'Category name to search for')
+class BooksByCategory(Resource):
+    @api.doc('get_books_by_category')
+    @api.param('limit', 'Maximum number of results (1-100)', type=int, default=50)
+    @api.param('skip', 'Number of results to skip for pagination', type=int, default=0)
+    @api.marshal_with(models['search_response'])
+    @api.response(200, 'Books retrieved successfully')
+    @api.response(400, 'Invalid parameters')
+    @api.response(500, 'Internal server error')
+    def get(self, category):
+        """Get all books in a specific category"""
+        try:
+            limit = request.args.get('limit', 50, type=int)
+            skip = request.args.get('skip', 0, type=int)
+
+            # Validate pagination parameters
+            if limit <= 0 or limit > 100:
+                limit = 50
+            if skip < 0:
+                skip = 0
+
+            books = db_service.get_books_by_category(category, limit=limit, skip=skip)
+
+            return {
+                "message": f"Found {len(books)} books in category '{category}'",
+                "books": books,
+                "search_criteria": {"category": category},
+                "pagination": {
+                    "limit": limit,
+                    "skip": skip,
+                    "count": len(books)
+                }
+            }, 200
+
+        except Exception as e:
+            api.abort(500, f"An unexpected error occurred: {str(e)}")
