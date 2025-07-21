@@ -7,7 +7,6 @@ class DatabaseService:
     def __init__(self):
         """
         Initialize MongoDB connection.
-
         :raises ConnectionFailure: If cannot connect to MongoDB
         :raises Exception: If unexpected error during initialization
         """
@@ -30,6 +29,7 @@ class DatabaseService:
             print(f"Unexpected error initializing database: {e}")
             raise
 
+    # Create
     def add_book(self, book_data):
         """
         Add a book to the collection
@@ -45,6 +45,92 @@ class DatabaseService:
             return False
         except Exception as e:
             print(f"Error to add book into the database: {e}")
+            raise
+
+    # Read
+    def get_all_books(self, limit=50, skip=0):
+        """
+        Get all books with pagination.
+
+        :param limit: Maximum number of books to return
+        :type limit: int
+        :param skip: Number of books to skip
+        :type skip: int
+        :return: List of books
+        :rtype: list
+        :raises Exception: If database operation fails
+        """
+        try:
+            books = list(self.collection.find().skip(skip).limit(limit))
+
+            # Convert ObjectId to string for JSON serialization
+            for book in books:
+                book['_id'] = str(book['_id'])
+
+            print(f"Retrieved {len(books)} books from database")
+            return books
+
+        except Exception as e:
+            print(f"Error retrieving books: {e}")
+            raise
+
+    # Update
+    def update_book(self, isbn, updated_data):
+        """
+        Update book information by ISBN.
+
+        :param isbn: Book ISBN identifier
+        :type isbn: str
+        :param updated_data: Dictionary with fields to update
+        :type updated_data: dict
+        :return: True if book was updated, False if not found
+        :rtype: bool
+        :raises Exception: If database operation fails
+        """
+        try:
+            # Remove ISBN from updated_data to prevent changing the unique key
+            if 'isbn' in updated_data:
+                del updated_data['isbn']
+
+            result = self.collection.update_one(
+                {"isbn": isbn},
+                {"$set": updated_data}
+            )
+
+            if result.matched_count > 0:
+                print(f"Book with ISBN {isbn} updated successfully")
+                return True
+            else:
+                print(f"No book found with ISBN {isbn}")
+                return False
+
+        except Exception as e:
+            print(f"Error updating book: {e}")
+            raise
+
+    # Delete
+    def delete_book(self, isbn):
+        """
+        Delete a book by ISBN.
+
+        :param isbn: Book ISBN identifier
+        :type isbn: str
+        :return: True if book was deleted, False if not found
+        :rtype: bool
+        :raises Exception: If database operation fails
+        """
+        try:
+            result = self.collection.delete_one({"isbn": isbn})
+
+            if result.deleted_count > 0:
+                print(f"Book with ISBN {isbn} deleted successfully")
+                return True
+            else:
+                print(f"No book found with ISBN {isbn}")
+                return False
+
+        except Exception as e:
+            print(f"Error deleting book: {e}")
             raise
 
     def book_exists(self, isbn):

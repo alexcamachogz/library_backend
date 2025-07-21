@@ -1,14 +1,34 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_restx import Api
+
 
 def create_app():
-    app = Flask(__name__)
-    CORS(app) # Allow petitions from any origin
+    """
+    Create and configure Flask application with Swagger documentation.
 
-    from src.controllers.book_controller import book_bp
-    app.register_blueprint(book_bp)
+    :return: Configured Flask application
+    :rtype: Flask
+    """
+    app = Flask(__name__)
+    CORS(app)
+
+    # Configure Swagger/OpenAPI documentation
+    api = Api(
+        app,
+        version='1.0',
+        title='Library Inventory API',
+        description='A simple API for managing your personal book library',
+        doc='/docs/',  # Swagger UI will be available at /docs/
+        prefix='/api/v1'  # All endpoints will be prefixed with /api/v1
+    )
+
+    # Register namespaces (controllers) with Swagger
+    from src.controllers.book_controller import api as book_api
+    api.add_namespace(book_api, path='/books')
 
     return app
+
 
 if __name__ == '__main__':
     app = create_app()
