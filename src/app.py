@@ -11,7 +11,13 @@ def create_app():
     :rtype: Flask
     """
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": "*",
+            "methods": ["GET", "POST", "PUT", "DELETE"],
+            "allow_headers": ["Content-Type"]
+        }
+    })
 
     # Configure Swagger/OpenAPI documentation
     api = Api(

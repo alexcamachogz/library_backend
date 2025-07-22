@@ -397,3 +397,115 @@ class DatabaseService:
         except Exception as e:
             print(f"Error getting reading statistics: {e}")
             raise
+
+    # Add these methods to your DatabaseService class
+
+    def get_total_books_count(self):
+        """
+        Get total count of all books in the library.
+
+        :return: Total number of books
+        :rtype: int
+        """
+        try:
+            return self.collection.count_documents({})
+        except Exception as e:
+            print(f"Error getting total books count: {e}")
+            return 0
+
+    def search_books_count(self, query=None, title=None, author=None, category=None):
+        """
+        Get count of books matching search criteria.
+
+        :param query: General search query
+        :type query: str or None
+        :param title: Title search query
+        :type title: str or None
+        :param author: Author search query
+        :type author: str or None
+        :param category: Category search query
+        :type category: str or None
+        :return: Count of matching books
+        :rtype: int
+        """
+        try:
+            # Build search filters
+            filters = []
+
+            if query:
+                filters.append({
+                    "$or": [
+                        {"title": {"$regex": query, "$options": "i"}},
+                        {"authors": {"$regex": query, "$options": "i"}},
+                        {"description": {"$regex": query, "$options": "i"}}
+                    ]
+                })
+
+            if title:
+                filters.append({"title": {"$regex": title, "$options": "i"}})
+
+            if author:
+                filters.append({"authors": {"$regex": author, "$options": "i"}})
+
+            if category:
+                filters.append({"categories": {"$regex": category, "$options": "i"}})
+
+            # Combine filters
+            if filters:
+                search_filter = {"$and": filters} if len(filters) > 1 else filters[0]
+            else:
+                search_filter = {}
+
+            return self.collection.count_documents(search_filter)
+        except Exception as e:
+            print(f"Error counting search results: {e}")
+            return 0
+
+    def get_books_by_status_count(self, status):
+        """
+        Get count of books by reading status.
+
+        :param status: Reading status ('read' or 'unread')
+        :type status: str
+        :return: Count of books with specified status
+        :rtype: int
+        """
+        try:
+            return self.collection.count_documents({"reading_status": status})
+        except Exception as e:
+            print(f"Error getting books count by status: {e}")
+            return 0
+
+    def get_books_by_author_count(self, author):
+        """
+        Get count of books by specific author.
+
+        :param author: Author name to search for
+        :type author: str
+        :return: Count of books by author
+        :rtype: int
+        """
+        try:
+            return self.collection.count_documents({
+                "authors": {"$regex": author, "$options": "i"}
+            })
+        except Exception as e:
+            print(f"Error getting books count by author: {e}")
+            return 0
+
+    def get_books_by_category_count(self, category):
+        """
+        Get count of books in specific category.
+
+        :param category: Category name to search for
+        :type category: str
+        :return: Count of books in category
+        :rtype: int
+        """
+        try:
+            return self.collection.count_documents({
+                "categories": {"$regex": category, "$options": "i"}
+            })
+        except Exception as e:
+            print(f"Error getting books count by category: {e}")
+            return 0

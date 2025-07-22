@@ -35,7 +35,9 @@ class BookList(Resource):
             if skip < 0:
                 skip = 0
 
+            # Get books and total count
             books = db_service.get_all_books(limit=limit, skip=skip)
+            total_count = db_service.get_total_books_count()
 
             return {
                 "message": f"Retrieved {len(books)} books",
@@ -43,7 +45,12 @@ class BookList(Resource):
                 "pagination": {
                     "limit": limit,
                     "skip": skip,
-                    "count": len(books)
+                    "count": len(books),
+                    "total": total_count,
+                    "has_next": skip + len(books) < total_count,
+                    "has_prev": skip > 0,
+                    "page": skip // limit + 1,
+                    "total_pages": (total_count + limit - 1) // limit
                 }
             }, 200
         except Exception as e:
@@ -239,6 +246,14 @@ class BookSearch(Resource):
                 skip=skip
             )
 
+            # Get total count for this search
+            total_count = db_service.search_books_count(
+                query=query if query else None,
+                title=title if title else None,
+                author=author if author else None,
+                category=category if category else None
+            )
+
             # Build search criteria for response
             search_criteria = {}
             if query:
@@ -257,7 +272,12 @@ class BookSearch(Resource):
                 "pagination": {
                     "limit": limit,
                     "skip": skip,
-                    "count": len(books)
+                    "count": len(books),
+                    "total": total_count,
+                    "has_next": skip + len(books) < total_count,
+                    "has_prev": skip > 0,
+                    "page": skip // limit + 1,
+                    "total_pages": (total_count + limit - 1) // limit
                 }
             }, 200
 
@@ -288,6 +308,7 @@ class BooksByAuthor(Resource):
                 skip = 0
 
             books = db_service.get_books_by_author(author, limit=limit, skip=skip)
+            total_count = db_service.get_books_by_author_count(author)
 
             return {
                 "message": f"Found {len(books)} books by author '{author}'",
@@ -296,7 +317,12 @@ class BooksByAuthor(Resource):
                 "pagination": {
                     "limit": limit,
                     "skip": skip,
-                    "count": len(books)
+                    "count": len(books),
+                    "total": total_count,
+                    "has_next": skip + len(books) < total_count,
+                    "has_prev": skip > 0,
+                    "page": skip // limit + 1,
+                    "total_pages": (total_count + limit - 1) // limit
                 }
             }, 200
 
@@ -327,6 +353,7 @@ class BooksByCategory(Resource):
                 skip = 0
 
             books = db_service.get_books_by_category(category, limit=limit, skip=skip)
+            total_count = db_service.get_books_by_category_count(category)
 
             return {
                 "message": f"Found {len(books)} books in category '{category}'",
@@ -335,7 +362,12 @@ class BooksByCategory(Resource):
                 "pagination": {
                     "limit": limit,
                     "skip": skip,
-                    "count": len(books)
+                    "count": len(books),
+                    "total": total_count,
+                    "has_next": skip + len(books) < total_count,
+                    "has_prev": skip > 0,
+                    "page": skip // limit + 1,
+                    "total_pages": (total_count + limit - 1) // limit
                 }
             }, 200
 
@@ -415,6 +447,7 @@ class BooksByStatus(Resource):
                 skip = 0
 
             books = db_service.get_books_by_status(status, limit=limit, skip=skip)
+            total_count = db_service.get_books_by_status_count(status)
 
             return {
                 "message": f"Found {len(books)} {status} books",
@@ -423,7 +456,12 @@ class BooksByStatus(Resource):
                 "pagination": {
                     "limit": limit,
                     "skip": skip,
-                    "count": len(books)
+                    "count": len(books),
+                    "total": total_count,
+                    "has_next": skip + len(books) < total_count,
+                    "has_prev": skip > 0,
+                    "page": skip // limit + 1,
+                    "total_pages": (total_count + limit - 1) // limit
                 }
             }, 200
 
