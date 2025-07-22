@@ -486,3 +486,78 @@ class ReadingStatistics(Resource):
 
         except Exception as e:
             api.abort(500, f"An unexpected error occurred: {str(e)}")
+
+@api.route('/manual')
+class ManualBook(Resource):
+    @api.doc('add_manual_book')
+    @api.expect(models['book_manual_input'])
+    @api.marshal_with(models['success_response'])
+    @api.response(201, 'Book added successfully')
+    @api.response(400, 'Invalid input')
+    @api.response(409, 'Book already exists')
+    @api.response(500, 'Internal server error')
+    def post(self):
+        """Add a book manually with all details"""
+        try:
+            data = request.get_json()
+
+            if not data:
+                api.abort(400, "Book data is required")
+
+            # Required fields validation
+            required_fields = ['isbn', 'title', 'authors']
+            for field in required_fields:
+                if field not in data or not data[field]:
+                    api.abort(400, f"{field.title()} is required")
+
+            isbn = data['isbn'].strip()
+
+            # Validate ISBN format
+            if not validate_isbn(isbn):
+                api.abort(400, "Please provide a valid ISBN-10 or ISBN-13")
+
+            # Check if book already exists
+            if db_service.book_exists(isbn):
+                api.abort(409, f"A book with ISBN {isbn} is already in your library")
+
+            # Prepare book data
+            book_data = {
+                'isbn': isbn,
+                'title': data['title'].strip(),
+                'authors': data['authors'] if isinstance(data['authors'], list) else [data['authors']],
+                'description': data.get('description', ''),
+                'categories': data.get('categories', []),
+                'page_count': data.get('page_count'),
+                'cover_image': data.get('cover_image', ''),
+                'published_date': data.get('published_date', ''),
+                'publisher': data.get('publisher', ''),
+                'language': data.get('language', 'en'),
+                'reading_status': data.get('reading_status', 'unread')
+            }
+
+            # Validate reading status
+            if book_data['reading_status'] not in ['read', 'unread']:
+                book_data['reading_status'] = 'unread'
+
+            # Ensure page_count is integer or None
+            if book_data['page_count'] is not None:
+                try:
+                    book_data['page_count'] = int(book_data['page_count'])
+                except (ValueError, TypeError):
+                    book_data['page_count'] = None
+
+            # Save to database
+            success = db_service.add_book(book_data)
+
+            if success:
+                return {
+                    "message": "Book added successfully",
+                    "book": book_data
+                }, 201
+            else:
+                api.abort(500, "There was an error saving the book to the database")
+
+        except Exception as e:
+            if not str(e).startswith('400') and not str(e).startswith('409'):
+                api.abort(500, f"An unexpected error occurred: {str(e)}")
+            raise
