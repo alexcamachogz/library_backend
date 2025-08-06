@@ -12,7 +12,7 @@ def create_app():
     """
     app = Flask(__name__)
     CORS(app, resources={
-        r"/api/*": {
+        r"/api/v1/*": {
             "origins": "*",
             "methods": ["GET", "POST", "PUT", "DELETE"],
             "allow_headers": ["Content-Type"]
@@ -35,7 +35,7 @@ def create_app():
 
     return app
 
+app = create_app()
 
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True, host='0.0.0.0', port=5001)
