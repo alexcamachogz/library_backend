@@ -398,8 +398,8 @@ class BookStatus(Resource):
 
             status = data['reading_status']
 
-            if status not in ['read', 'unread']:
-                api.abort(400, "Reading status must be 'read' or 'unread'")
+            if status not in ['read', 'unread', 'in_progress']:
+                api.abort(400, "Reading status must be 'read', 'unread', or 'in_progress'")
 
             if not db_service.book_exists(isbn):
                 api.abort(404, f"No book found with ISBN {isbn} in your library")
@@ -422,7 +422,7 @@ class BookStatus(Resource):
 
 
 @api.route('/status/<string:status>')
-@api.param('status', 'Reading status to filter by', enum=['read', 'unread'])
+@api.param('status', 'Reading status to filter by', enum=['read', 'unread', 'in_progress'])
 class BooksByStatus(Resource):
     @api.doc('get_books_by_status')
     @api.param('limit', 'Maximum number of results (1-100)', type=int, default=50)
@@ -434,8 +434,8 @@ class BooksByStatus(Resource):
     def get(self, status):
         """Get all books by reading status"""
         try:
-            if status not in ['read', 'unread']:
-                api.abort(400, "Status must be 'read' or 'unread'")
+            if status not in ['read', 'unread', 'in_progress']:
+                api.abort(400, "Status must be 'read', 'unread', or 'in_progress'")
 
             limit = request.args.get('limit', 50, type=int)
             skip = request.args.get('skip', 0, type=int)
@@ -475,7 +475,7 @@ class ReadingStatistics(Resource):
     @api.response(200, 'Statistics retrieved successfully')
     @api.response(500, 'Internal server error')
     def get(self):
-        """Get reading statistics (read vs unread books)"""
+        """Get reading statistics (read vs unread vs in_progress books)"""
         try:
             stats = db_service.get_reading_statistics()
 
@@ -536,7 +536,7 @@ class ManualBook(Resource):
             }
 
             # Validate reading status
-            if book_data['reading_status'] not in ['read', 'unread']:
+            if book_data['reading_status'] not in ['read', 'unread', 'in_progress']:
                 book_data['reading_status'] = 'unread'
 
             # Ensure page_count is integer or None

@@ -2,11 +2,18 @@ from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError, ConnectionFailure
 from src.utils.config import MONGODB_URL, DATABASE_NAME, COLLECTION_NAME
 
+
 class DatabaseService:
+    """
+    Database service class for MongoDB operations.
+
+    Handles all CRUD operations for book management in the library inventory system.
+    """
 
     def __init__(self):
         """
         Initialize MongoDB connection.
+
         :raises ConnectionFailure: If cannot connect to MongoDB
         :raises Exception: If unexpected error during initialization
         """
@@ -143,7 +150,13 @@ class DatabaseService:
 
     def book_exists(self, isbn):
         """
-        Verify if the book exists in the collection
+        Verify if the book exists in the collection.
+
+        :param isbn: Book ISBN identifier
+        :type isbn: str
+        :return: True if book exists, False otherwise
+        :rtype: bool
+        :raises Exception: If database operation fails
         """
         try:
             count = self.collection.count_documents({"isbn": isbn})
@@ -154,7 +167,13 @@ class DatabaseService:
 
     def get_book_by_isbn(self, isbn):
         """
-        Get book by ISBN
+        Get book by ISBN.
+
+        :param isbn: Book ISBN identifier
+        :type isbn: str
+        :return: Book document or None if not found
+        :rtype: dict or None
+        :raises Exception: If database operation fails
         """
         try:
             book = self.collection.find_one({"isbn": isbn})
@@ -164,7 +183,7 @@ class DatabaseService:
 
     def close_connection(self):
         """
-        Close the database connection
+        Close the database connection.
         """
         if self.client:
             self.client.close()
@@ -305,7 +324,7 @@ class DatabaseService:
 
         :param isbn: Book ISBN identifier
         :type isbn: str
-        :param status: New reading status ('read' or 'unread')
+        :param status: New reading status ('read', 'unread', or 'in_progress')
         :type status: str
         :return: True if status was updated, False if book not found
         :rtype: bool
@@ -313,8 +332,8 @@ class DatabaseService:
         """
         try:
             # Validate status
-            if status not in ['read', 'unread']:
-                raise ValueError("Status must be 'read' or 'unread'")
+            if status not in ['read', 'unread', 'in_progress']:
+                raise ValueError("Status must be 'read', 'unread', or 'in_progress'")
 
             result = self.collection.update_one(
                 {"isbn": isbn},
@@ -336,7 +355,7 @@ class DatabaseService:
         """
         Get books by reading status.
 
-        :param status: Reading status to filter by ('read' or 'unread')
+        :param status: Reading status to filter by ('read', 'unread', or 'in_progress')
         :type status: str
         :param limit: Maximum number of books to return
         :type limit: int
@@ -347,8 +366,8 @@ class DatabaseService:
         :raises Exception: If database operation fails
         """
         try:
-            if status not in ['read', 'unread']:
-                raise ValueError("Status must be 'read' or 'unread'")
+            if status not in ['read', 'unread', 'in_progress']:
+                raise ValueError("Status must be 'read', 'unread', or 'in_progress'")
 
             books = list(
                 self.collection.find({"reading_status": status})
@@ -369,7 +388,7 @@ class DatabaseService:
 
     def get_reading_statistics(self):
         """
-        Get reading statistics (count of read vs unread books).
+        Get reading statistics (count of read vs unread vs in_progress books).
 
         :return: Dictionary with reading statistics
         :rtype: dict
@@ -379,16 +398,19 @@ class DatabaseService:
             # Count books by status
             read_count = self.collection.count_documents({"reading_status": "read"})
             unread_count = self.collection.count_documents({"reading_status": "unread"})
+            in_progress_count = self.collection.count_documents({"reading_status": "in_progress"})
             total_count = self.collection.count_documents({})
 
             # Handle books without reading_status (existing books)
-            no_status_count = total_count - read_count - unread_count
+            no_status_count = total_count - read_count - unread_count - in_progress_count
 
             stats = {
                 "total_books": total_count,
                 "read": read_count,
                 "unread": unread_count + no_status_count,  # Consider books without status as unread
-                "reading_percentage": round((read_count / total_count * 100), 2) if total_count > 0 else 0
+                "in_progress": in_progress_count,
+                "reading_percentage": round((read_count / total_count * 100), 2) if total_count > 0 else 0,
+                "progress_percentage": round((in_progress_count / total_count * 100), 2) if total_count > 0 else 0
             }
 
             print(f"Reading statistics: {stats}")
@@ -398,7 +420,7 @@ class DatabaseService:
             print(f"Error getting reading statistics: {e}")
             raise
 
-    # Add these methods to your DatabaseService class
+    # Additional count methods
 
     def get_total_books_count(self):
         """
@@ -465,7 +487,7 @@ class DatabaseService:
         """
         Get count of books by reading status.
 
-        :param status: Reading status ('read' or 'unread')
+        :param status: Reading status ('read', 'unread', or 'in_progress')
         :type status: str
         :return: Count of books with specified status
         :rtype: int

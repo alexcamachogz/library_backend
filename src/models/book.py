@@ -1,5 +1,3 @@
-# Agregar este modelo en tu models/book.py
-
 from flask_restx import fields
 
 
@@ -18,7 +16,7 @@ def get_book_models(api):
         'isbn': fields.String(required=True, description='Book ISBN', example='9780439708180')
     })
 
-    # NEW: Manual book input model
+    # Manual book input model
     book_manual_input = api.model('BookManualInput', {
         'isbn': fields.String(required=True, description='Book ISBN', example='9780439708180'),
         'title': fields.String(required=True, description='Book title',
@@ -33,7 +31,7 @@ def get_book_models(api):
         'published_date': fields.String(description='Publication date (YYYY-MM-DD)', example='1997-06-26'),
         'publisher': fields.String(description='Publisher name', example='Bloomsbury'),
         'language': fields.String(description='Book language code', example='en'),
-        'reading_status': fields.String(description='Reading status', enum=['read', 'unread'], example='unread')
+        'reading_status': fields.String(description='Reading status', enum=['read', 'unread', 'in_progress'], example='unread')
     })
 
     # Book output model
@@ -49,7 +47,7 @@ def get_book_models(api):
         'published_date': fields.String(description='Publication date'),
         'publisher': fields.String(description='Publisher'),
         'language': fields.String(description='Book language'),
-        'reading_status': fields.String(description='Reading status')
+        'reading_status': fields.String(description='Reading status', enum=['read', 'unread', 'in_progress'])
     })
 
     # Book update model
@@ -63,12 +61,12 @@ def get_book_models(api):
         'published_date': fields.String(description='Publication date'),
         'publisher': fields.String(description='Publisher'),
         'language': fields.String(description='Book language'),
-        'reading_status': fields.String(description='Reading status', enum=['read', 'unread'])
+        'reading_status': fields.String(description='Reading status', enum=['read', 'unread', 'in_progress'])
     })
 
     # Status update model
     status_update = api.model('StatusUpdate', {
-        'reading_status': fields.String(required=True, description='Reading status', enum=['read', 'unread'])
+        'reading_status': fields.String(required=True, description='Reading status', enum=['read', 'unread', 'in_progress'])
     })
 
     # Success response model
@@ -81,7 +79,7 @@ def get_book_models(api):
     status_response = api.model('StatusResponse', {
         'message': fields.String(description='Success message'),
         'isbn': fields.String(description='Book ISBN'),
-        'reading_status': fields.String(description='Updated reading status')
+        'reading_status': fields.String(description='Updated reading status', enum=['read', 'unread', 'in_progress'])
     })
 
     # Pagination model
@@ -102,7 +100,7 @@ def get_book_models(api):
         'title': fields.String(description='Title search'),
         'author': fields.String(description='Author search'),
         'category': fields.String(description='Category search'),
-        'reading_status': fields.String(description='Reading status filter')
+        'reading_status': fields.String(description='Reading status filter', enum=['read', 'unread', 'in_progress'])
     })
 
     # Books list response model
