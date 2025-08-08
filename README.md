@@ -398,16 +398,6 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - Image upload functionality is not yet implemented
 - No user authentication or authorization system
 
-## 🔮 Roadmap
-
-- [ ] User authentication and authorization
-- [ ] Bulk book import/export functionality
-- [ ] Book recommendations system
-- [ ] Image upload for custom book covers
-- [ ] Reading goals and progress tracking
-- [ ] Book reviews and ratings
-- [ ] Social features (sharing lists, following friends)
-
 ## 📞 Support
 
 If you encounter any issues or have questions:
