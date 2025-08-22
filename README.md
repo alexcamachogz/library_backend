@@ -1,4 +1,4 @@
-dame e# Library Inventory API 📚
+# Library Inventory API 📚
 
 A comprehensive REST API for managing your personal book library, built with Flask and MongoDB. This API allows you to track books, manage reading status, search through your collection, and organize books by categories.
 
@@ -397,16 +397,6 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - Currently, the API doesn't support bulk operations for adding multiple books
 - Image upload functionality is not yet implemented
 - No user authentication or authorization system
-
-## 🔮 Roadmap
-
-- [ ] User authentication and authorization
-- [ ] Bulk book import/export functionality
-- [ ] Book recommendations system
-- [ ] Image upload for custom book covers
-- [ ] Reading goals and progress tracking
-- [ ] Book reviews and ratings
-- [ ] Social features (sharing lists, following friends)
 
 ## 📞 Support
 
