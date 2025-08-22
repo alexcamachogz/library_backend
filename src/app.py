@@ -12,9 +12,10 @@ def create_app():
     app = Flask(__name__)
     CORS(app, resources={
         r"/api/v1/*": {
-            "origins": "*",
-            "methods": ["GET", "POST", "PUT", "DELETE"],
-            "allow_headers": ["Content-Type"]
+            "origins": ["https://library.mcorner.art", "http://localhost:3000", "http://localhost:5173"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization", "Accept"],
+            "supports_credentials": True
         }
     })
 
