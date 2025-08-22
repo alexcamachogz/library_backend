@@ -55,7 +55,9 @@ class GoogleBooksService:
             'cover_image': GoogleBooksService._get_cover_image(book_data),
             'published_date': book_data.get('publishedDate', ''),
             'publisher': book_data.get('publisher', ''),
-            'language': book_data.get('language', '')
+            'language': book_data.get('language', ''),
+            'format': '',
+            'reading_status': 'unread'
         }
 
     @staticmethod

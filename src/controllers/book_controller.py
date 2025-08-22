@@ -532,8 +532,13 @@ class ManualBook(Resource):
                 'published_date': data.get('published_date', ''),
                 'publisher': data.get('publisher', ''),
                 'language': data.get('language', 'en'),
+                'format': data.get('format', ''),
                 'reading_status': data.get('reading_status', 'unread')
             }
+
+            # Validate format
+            if book_data['format'] and book_data['format'] not in ['physical', 'digital']:
+                book_data['format'] = ''
 
             # Validate reading status
             if book_data['reading_status'] not in ['read', 'unread', 'in_progress']:

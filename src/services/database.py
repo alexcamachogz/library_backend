@@ -50,6 +50,9 @@ class DatabaseService:
         try:
             if 'reading_status' not in book_data:
                 book_data['reading_status'] = 'unread'
+                
+            if 'format' not in book_data:
+                book_data['format'] = ''
 
             result = self.collection.insert_one(book_data)
             print(f"Book successfully added with ID: {result.inserted_id}")

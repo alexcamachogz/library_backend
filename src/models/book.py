@@ -31,6 +31,7 @@ def get_book_models(api):
         'published_date': fields.String(description='Publication date (YYYY-MM-DD)', example='1997-06-26'),
         'publisher': fields.String(description='Publisher name', example='Bloomsbury'),
         'language': fields.String(description='Book language code', example='en'),
+        'format': fields.String(description='Book format', enum=['physical', 'digital'], example=''),
         'reading_status': fields.String(description='Reading status', enum=['read', 'unread', 'in_progress'], example='unread')
     })
 
@@ -47,6 +48,7 @@ def get_book_models(api):
         'published_date': fields.String(description='Publication date'),
         'publisher': fields.String(description='Publisher'),
         'language': fields.String(description='Book language'),
+        'format': fields.String(description='Book format', enum=['physical', 'digital']),
         'reading_status': fields.String(description='Reading status', enum=['read', 'unread', 'in_progress'])
     })
 
@@ -61,6 +63,7 @@ def get_book_models(api):
         'published_date': fields.String(description='Publication date'),
         'publisher': fields.String(description='Publisher'),
         'language': fields.String(description='Book language'),
+        'format': fields.String(description='Book format', enum=['physical', 'digital']),
         'reading_status': fields.String(description='Reading status', enum=['read', 'unread', 'in_progress'])
     })
 
@@ -100,6 +103,7 @@ def get_book_models(api):
         'title': fields.String(description='Title search'),
         'author': fields.String(description='Author search'),
         'category': fields.String(description='Category search'),
+        'format': fields.String(description='Format filter', enum=['physical', 'digital']),
         'reading_status': fields.String(description='Reading status filter', enum=['read', 'unread', 'in_progress'])
     })
 
